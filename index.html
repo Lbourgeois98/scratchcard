@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pick Your Gift!</title>
+
 <style>
     body {
         margin: 0;
@@ -11,70 +13,83 @@
         overflow-x: hidden;
         text-align: center;
     }
+
     .container {
         position: relative;
         max-width: 450px;
         margin: auto;
     }
+
     .main-img {
         width: 100%;
         display: block;
+        user-select: none;
+        -webkit-user-drag: none;
     }
 
-    /* HOTSPOTS */
+    /* Gift hotspot containers */
     .gift-wrapper {
         position: absolute;
         width: 80px;
         height: 80px;
         transform: translate(-50%, -50%);
-        perspective: 800px;
+        perspective: 900px;
+        transition: opacity 0.3s ease;
     }
 
+    /* The flip card */
     .gift-card {
         width: 100%;
         height: 100%;
         position: relative;
-        transition: transform 0.6s;
         transform-style: preserve-3d;
+        transition: transform 0.6s;
         cursor: pointer;
     }
 
+    /* Apply flip */
     .gift-card.flipped {
         transform: rotateY(180deg);
     }
 
+    /* Front & back faces */
     .front, .back {
         position: absolute;
         width: 100%;
         height: 100%;
         backface-visibility: hidden;
-        border-radius: 10px;
+        border-radius: 12px;
+    }
+
+    .front {
+        background: transparent; /* invisible hotspot */
     }
 
     .back {
-        background: #fff;
+        background: #ffffff;
         transform: rotateY(180deg);
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 18px;
-        padding: 5px;
+        padding: 6px;
         font-weight: bold;
         text-align: center;
     }
 
-    /* Disabled gifts */
+    /* Disable other gifts */
     .disabled .gift-card {
         pointer-events: none;
-        opacity: 0.3;
+        opacity: 0.25;
     }
+
 </style>
 </head>
-
 <body>
 
 <div class="container">
-    <img src="Instant.JPG" class="main-img">
+    <!-- Your main image -->
+    <img src="/Instant.JPG" class="main-img">
 
     <!-- CHRISTMAS TREE -->
     <div class="gift-wrapper" style="top:22%; left:18%;">
@@ -138,16 +153,16 @@
 let hasPicked = false;
 
 function pickGift(card) {
-    if (hasPicked) return;
-
-    // Flip chosen card
-    card.classList.add("flipped");
-
+    if (hasPicked) return; // Don't allow multiple picks
     hasPicked = true;
+
+    // Flip the selected gift
+    card.classList.add("flipped");
 
     // Disable all other gifts
     document.querySelectorAll(".gift-wrapper").forEach(wrapper => {
-        if (wrapper.querySelector(".gift-card") !== card) {
+        const child = wrapper.querySelector(".gift-card");
+        if (child !== card) {
             wrapper.classList.add("disabled");
         }
     });
