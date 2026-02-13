@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valentine Scratch & Win</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
 <style>
-body {
+html, body {
   margin: 0;
-  min-height: 100vh;
-  background: url("/assets/bg.jpg") center/cover no-repeat;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: url("assets/bg.jpg") center/cover no-repeat fixed;
   font-family: 'Playfair Display', serif;
   display: flex;
   justify-content: center;
@@ -21,22 +25,22 @@ body {
 .card {
   width: 360px;
   height: 560px;
-  background: radial-gradient(circle at top, #9d1628, #5b0b15);
-  border: 6px solid #d4af37;
+  background: linear-gradient(#8b1120, #4a0710);
+  border: 5px solid #d4af37;
   border-radius: 22px;
-  box-shadow: 0 0 35px rgba(212,175,55,0.8);
-  position: relative;
+  box-shadow: 0 0 30px rgba(212,175,55,.8);
   text-align: center;
+  position: relative;
   color: gold;
 }
 
 .header {
-  font-size: 22px;
   margin-top: 18px;
-  text-shadow: 0 0 8px #ffd700;
+  font-size: 22px;
+  text-shadow: 0 0 10px gold;
 }
 
-.heart-wrap {
+.heart-area {
   position: absolute;
   top: 140px;
   left: 50%;
@@ -45,38 +49,35 @@ body {
   height: 240px;
 }
 
-#prizeText {
+.prize {
   position: absolute;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 34px;
-  text-align: center;
+  font-size: 30px;
   padding: 20px;
-  z-index: 1;
   text-shadow: 0 0 12px gold;
+  z-index: 1;
+  user-select: none;
 }
 
 canvas {
   position: absolute;
   inset: 0;
   z-index: 2;
+  touch-action: none;
 }
 
-#nameModal {
+#modal {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,.85);
   display: none;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
   z-index: 10;
-}
-
-#nameModal h2 {
-  margin-bottom: 10px;
 }
 
 input {
@@ -84,19 +85,19 @@ input {
   font-size: 18px;
   border-radius: 10px;
   border: none;
+  margin-top: 10px;
   width: 240px;
   text-align: center;
 }
 
 button {
-  margin-top: 12px;
-  padding: 14px 24px;
+  margin-top: 14px;
+  padding: 14px 26px;
   font-size: 18px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(#f7e27c, #d4af37);
+  background: linear-gradient(#ffeaa7, #d4af37);
   cursor: pointer;
-  box-shadow: 0 0 12px gold;
 }
 </style>
 </head>
@@ -106,110 +107,107 @@ button {
 <div class="card">
   <div class="header">💘 Valentine Scratch & Win 💘</div>
 
-  <div class="heart-wrap">
-    <div id="prizeText">Scratch to Reveal!</div>
+  <div class="heart-area">
+    <div class="prize" id="prizeText"></div>
     <canvas id="scratch"></canvas>
   </div>
 
-  <div id="nameModal">
+  <div id="modal">
     <h2>💖 Enter Your Name 💖</h2>
-    <input id="playerName" placeholder="Your Name" />
-    <button onclick="claimPrize()">Claim Prize</button>
+    <input id="name" placeholder="Your Name">
+    <button onclick="finish()">Continue</button>
   </div>
 </div>
 
 <script>
 /* --- ONE SCRATCH PER DEVICE --- */
-if (localStorage.getItem("scratched")) {
-  document.body.innerHTML = `
-    <div style="color:gold;text-align:center;font-size:22px;padding:40px">
-      💔 This scratch card has already been used.
-    </div>`;
+if (localStorage.getItem("used")) {
+  document.body.innerHTML =
+    "<h2 style='color:gold;text-align:center'>This card has already been scratched.</h2>";
 }
 
-/* --- RANDOM PRIZE DRAW --- */
+/* --- PRIZES --- */
 const prizes = [
   "3 FREEPLAY",
   "5 FREEPLAY",
-  "10% DEPOSIT BONUS",
-  "20% DEPOSIT BONUS",
-  "DIAMOND ENTRY"
+  "10% BONUS",
+  "20% BONUS",
+  "💎 DIAMOND ENTRY 💎"
 ];
 
 const prize = prizes[Math.floor(Math.random() * prizes.length)];
-document.getElementById("prizeText").innerText = prize;
+document.getElementById("prizeText").textContent = prize;
 
-/* --- SCRATCH CANVAS --- */
+/* --- CANVAS SETUP --- */
 const canvas = document.getElementById("scratch");
 const ctx = canvas.getContext("2d");
 
 canvas.width = 260;
 canvas.height = 240;
 
-// Load silver texture
+/* Draw silver layer */
 const img = new Image();
-img.src = "/assets/scratch-silver.png";
-img.onload = () => {
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+img.src = "assets/scratch-silver.png";
+img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  // Heart mask
-  ctx.globalCompositeOperation = "destination-in";
-  ctx.beginPath();
-  for (let t = 0; t <= Math.PI * 2; t += 0.01) {
-    const x = 130 + 80 * Math.pow(Math.sin(t), 3);
-    const y = 120 - (
-      60 * Math.cos(t)
-      - 25 * Math.cos(2 * t)
-      - 10 * Math.cos(3 * t)
-      - 5 * Math.cos(4 * t)
-    );
-    ctx.lineTo(x, y);
+/* Scratch logic */
+let scratching = false;
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  if (e.touches) {
+    return {
+      x: e.touches[0].clientX - r.left,
+      y: e.touches[0].clientY - r.top
+    };
   }
-  ctx.closePath();
-  ctx.fill();
+  return {
+    x: e.clientX - r.left,
+    y: e.clientY - r.top
+  };
+}
+
+function scratch(e) {
+  if (!scratching) return;
+  const p = getPos(e);
 
   ctx.globalCompositeOperation = "destination-out";
-};
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+  ctx.fill();
 
-let scratching = false;
+  checkProgress();
+}
+
+canvas.addEventListener("mousedown", () => scratching = true);
+canvas.addEventListener("mouseup", () => scratching = false);
+canvas.addEventListener("mousemove", scratch);
 
 canvas.addEventListener("touchstart", () => scratching = true);
 canvas.addEventListener("touchend", () => scratching = false);
 canvas.addEventListener("touchmove", scratch);
 
-function scratch(e) {
-  if (!scratching) return;
-  const r = canvas.getBoundingClientRect();
-  const x = e.touches[0].clientX - r.left;
-  const y = e.touches[0].clientY - r.top;
-
-  ctx.beginPath();
-  ctx.arc(x, y, 18, 0, Math.PI * 2);
-  ctx.fill();
-
-  checkScratch();
-}
-
-function checkScratch() {
-  const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+/* Scratch threshold */
+function checkProgress() {
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
   let cleared = 0;
-  for (let i=3;i<data.length;i+=4) {
-    if (data[i] === 0) cleared++;
+  for (let i = 3; i < imgData.length; i += 4) {
+    if (imgData[i] === 0) cleared++;
   }
-  if (cleared / (canvas.width * canvas.height) > 0.7) {
-    localStorage.setItem("scratched","true");
-    document.getElementById("nameModal").style.display = "flex";
+
+  if (cleared / (canvas.width * canvas.height) > 0.45) {
+    localStorage.setItem("used", "true");
+    document.getElementById("modal").style.display = "flex";
   }
 }
 
-function claimPrize() {
-  const name = document.getElementById("playerName").value;
+function finish() {
+  const name = document.getElementById("name").value.trim();
   if (!name) return;
 
-  localStorage.setItem("playerName", name);
+  localStorage.setItem("winner", name);
   localStorage.setItem("prize", prize);
-
-  window.location.href = "/congrats.html";
+  window.location.href = "congrats.html";
 }
 </script>
 
