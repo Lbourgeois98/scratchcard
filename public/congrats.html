@@ -1,0 +1,23 @@
+<div class="wrapper">
+  <div class="card">
+    <h1 class="ribbon">💘 Congratulations 💘</h1>
+    <p id="name"></p>
+    <h2 id="prize"></h2>
+
+    <div id="diamond" style="display:none">
+      💎 You are entered into the Grand Prize Drawing!
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("name").textContent =
+    localStorage.getItem("playerName");
+
+  const prize = localStorage.getItem("prize");
+  document.getElementById("prize").textContent = prize;
+
+  if (prize === "DIAMOND ENTRY") {
+    document.getElementById("diamond").style.display = "block";
+  }
+</script>
